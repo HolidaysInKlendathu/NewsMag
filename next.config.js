@@ -1,10 +1,20 @@
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    serverActions: true,
+    typedRoutes: true,
   },
-  images: { unoptimized: true },
-};
+  images: {
+    domains: [
+      'images.unsplash.com',
+      'res.cloudinary.com',  // if you use Cloudinary
+      'imgur.com',
+      'i.imgur.com',
+      's3.amazonaws.com',    // if you use AWS S3
+      'your-custom-domain.com'
+    ],
+  },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

@@ -3,10 +3,35 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+model Author {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?  @unique
+  bio         String?  @db.LongText
+  avatar      String?
+  website     String?
+  location    String?
+  expertise   String?  @db.Text
+  socialLinks Json?
+  joinedAt    DateTime @default(now())
+
+  // Professional details
+  title    String?
+  company  String?
+  featured Boolean @default(false)
+  verified Boolean @default(false)
+
+  // Relations
+  articles Article[]
+  userId   String?   @unique // Optional link to User account
+  user     User?     @relation(fields: [userId], references: [id])
+}
+
+// Authentication Models
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -34,18 +59,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  articles      Article[]
-  comments      Comment[]
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -54,43 +67,246 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+  bio           String?   @db.LongText
+  website       String?
+  location      String?
+  socialLinks   Json? // Store social media links
+  joinedAt      DateTime  @default(now())
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  comments      Comment[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  notifications Notification[]
+  profile       Profile?
+  author        Author? // Relation to Author model
+
+  // Newsletter subscription
+  newsletterSubscription NewsletterSubscription?
+}
+
+model Profile {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  displayName     String?
+  headline        String? @db.LongText
+  expertise       Json?
+  badges          Badge[]
+  verifiedProfile Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Content Models
 model Article {
-  id          String     @id @default(cuid())
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  content         String        @db.Text
+  excerpt         String        @db.Text
+  coverImage      String
+  readingTime     Int?
+  wordCount       Int?
+  publishedAt     DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  featured        Boolean       @default(false)
+  status          ArticleStatus @default(DRAFT)
+  viewCount       Int           @default(0)
+  metaTitle       String?
+  metaDescription String?       @db.Text
+
+  // Relations
+  authorId   String
+  author     Author     @relation(fields: [authorId], references: [id])
+  categories Category[]
+  tags       Tag[]
+  comments   Comment[]
+  likes      Like[]
+  bookmarks  Bookmark[]
+  series     Series?    @relation(fields: [seriesId], references: [id])
+  seriesId   String?
+
+  // Related Articles relations
+  relatedFrom ArticleRelation[] @relation("SourceArticles")
+  relatedTo   ArticleRelation[] @relation("RelatedToArticles")
+
+  // Analytics
+  analytics Analytics?
+}
+
+model Series {
+  id          String    @id @default(cuid())
   title       String
-  slug        String     @unique
-  content     String     @db.Text
-  excerpt     String     @db.Text
-  coverImage  String
-  publishedAt DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  featured    Boolean    @default(false)
-  authorId    String
-  author      User       @relation(fields: [authorId], references: [id])
-  categories  Category[]
-  tags        Tag[]
-  comments    Comment[]
+  slug        String    @unique
+  description String?   @db.Text
+  coverImage  String?
+  articles    Article[]
+  order       Int       @default(1)
 }
 
 model Category {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  slug     String    @unique
-  articles Article[]
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?    @db.Text
+  image       String?
+  parentId    String? // For nested categories
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  articles    Article[]
+  featured    Boolean    @default(false)
+  order       Int        @default(1)
 }
 
 model Tag {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  slug     String    @unique
-  articles Article[]
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?   @db.Text
+  articles    Article[]
 }
 
+// Interaction Models
 model Comment {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  createdAt DateTime @default(now())
+  id        String        @id @default(cuid())
+  content   String        @db.LongText
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  edited    Boolean       @default(false)
+  status    CommentStatus @default(PUBLISHED)
+
+  // Relations
   articleId String
   userId    String
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String? // For nested comments
+  article   Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  likes     Like[]
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  articleId String?
+  commentId String?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@unique([userId, commentId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  articleId String
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+}
+
+// Analytics Models
+model Analytics {
+  id          String  @id @default(cuid())
+  articleId   String  @unique
+  article     Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  views       Int     @default(0)
+  uniqueViews Int     @default(0)
+  shares      Int     @default(0)
+  avgReadTime Int     @default(0)
+  bounceRate  Float   @default(0)
+  devices     Json? // Store device statistics
+  referrers   Json? // Store traffic sources
+}
+
+model ArticleRelation {
+  id           String @id @default(cuid())
+  articleId    String
+  relatedId    String
+  relationship String // e.g., "sequel", "series", "related"
+  order        Int    @default(0)
+
+  sourceArticle  Article @relation("SourceArticles", fields: [articleId], references: [id], onDelete: Cascade)
+  relatedArticle Article @relation("RelatedToArticles", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, relatedId])
+  @@map("article_relations") // Optional: specify table name
+}
+
+// Newsletter & Notifications
+model NewsletterSubscription {
+  id          String             @id @default(cuid())
+  email       String             @unique
+  userId      String?            @unique
+  status      SubscriptionStatus @default(ACTIVE)
+  preferences Json? // Store subscription preferences
+  createdAt   DateTime           @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String // e.g., "comment", "like", "mention"
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Achievement System
+model Badge {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String
+  image       String
+  criteria    Json // Store achievement criteria
+  users       Profile[]
+}
+
+// Enums
+enum Role {
+  USER
+  AUTHOR
+  EDITOR
+  ADMIN
+}
+
+enum ArticleStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  PUBLISHED
+  SPAM
+  DELETED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PENDING
+  UNSUBSCRIBED
 }

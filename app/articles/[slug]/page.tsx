@@ -1,106 +1,243 @@
 import { Metadata } from 'next'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { format } from 'date-fns'
+import Image from 'next/image'
+import { MDXRemote } from 'next-mdx-remote'
+import { serialize } from 'next-mdx-remote/serialize'
+import remarkGfm from 'remark-gfm'
+import rehypeSlug from 'rehype-slug'
+import rehypeHighlight from 'rehype-highlight'
 import { prisma } from '@/lib/prisma'
-import { ShareButtons } from '@/components/share-buttons'
-import { ArticleContent } from '@/components/article-content'
-import { RelatedArticles } from '@/components/related-articles'
-import { Comments } from '@/components/comments'
-import { AuthorCard } from '@/components/author-card'
+import { ArticleStatus } from '@prisma/client'
 
-interface ArticlePageProps {
-  params: {
-    slug: string
-  }
-}
+export async function generateStaticParams() {
+ const articles = await prisma.article.findMany({
+   where: {
+     status: ArticleStatus.PUBLISHED
+   },
+   select: {
+     slug: true,
+   },
+ })
 
-async function getArticle(slug: string) {
-  const article = await prisma.article.findUnique({
-    where: { slug },
-    include: {
-      author: true,
-      categories: true,
-      tags: true,
-    },
-  })
-
-  if (!article) {
-    notFound()
-  }
-
-  return article
+ return articles.map((article) => ({
+   slug: article.slug,
+ }))
 }
 
 export async function generateMetadata({
-  params,
-}: ArticlePageProps): Promise<Metadata> {
-  const article = await getArticle(params.slug)
+ params,
+}: {
+ params: { slug: string }
+}): Promise<Metadata> {
+ try {
+   if (!params?.slug) {
+     return {
+       title: 'Article Not Found',
+     }
+   }
 
-  return {
-    title: article.title,
-    description: article.excerpt,
-  }
+   const article = await prisma.article.findFirst({
+     where: { 
+       slug: params.slug as string,
+       status: ArticleStatus.PUBLISHED,
+     },
+     select: {
+       title: true,
+       excerpt: true,
+       coverImage: true,
+       publishedAt: true,
+       updatedAt: true,
+       author: {
+         select: {
+           name: true,
+           avatar: true,
+         },
+       },
+       categories: {
+         select: {
+           name: true,
+         },
+       },
+       tags: {
+         select: {
+           name: true,
+         },
+       },
+     },
+   })
+
+   if (!article) {
+     return {
+       title: 'Article Not Found',
+     }
+   }
+
+   return {
+     title: article.title,
+     description: article.excerpt,
+     authors: article.author?.name ? [{ name: article.author.name }] : [],
+     openGraph: {
+       title: article.title,
+       description: article.excerpt,
+       type: 'article',
+       publishedTime: article.publishedAt.toISOString(),
+       modifiedTime: article.updatedAt.toISOString(),
+       authors: article.author?.name ? [article.author.name] : [],
+       images: article.coverImage ? [
+         {
+           url: article.coverImage,
+           width: 1200,
+           height: 630,
+           alt: article.title,
+         }
+       ] : [],
+     },
+   }
+ } catch (error) {
+   console.error('Error generating metadata:', error)
+   return {
+     title: 'Error Loading Article',
+   }
+ }
 }
 
-export default async function ArticlePage({ params }: ArticlePageProps) {
-  const article = await getArticle(params.slug)
+export default async function ArticlePage({
+ params,
+}: {
+ params: { slug: string }
+}) {
+ try {
+   if (!params?.slug) {
+     notFound()
+   }
 
-  return (
-    <article className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
-        
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <AuthorCard author={article.author} />
-            <time className="text-muted-foreground">
-              {format(article.publishedAt, 'MMMM d, yyyy')}
-            </time>
-          </div>
-          <ShareButtons article={article} />
-        </div>
+   const article = await prisma.article.findFirst({
+     where: { 
+       slug: params.slug as string,
+       status: ArticleStatus.PUBLISHED,
+     },
+     select: {
+       title: true,
+       content: true,
+       excerpt: true,
+       coverImage: true,
+       publishedAt: true,
+       readingTime: true,
+       author: {
+         select: {
+           name: true,
+           avatar: true,
+           bio: true,
+         },
+       },
+       categories: {
+         select: {
+           name: true,
+           slug: true,
+         },
+       },
+       tags: {
+         select: {
+           name: true,
+           slug: true,
+         },
+       },
+     },
+   })
 
-        <div className="relative aspect-video mb-8">
-          <Image
-            src={article.coverImage}
-            alt={article.title}
-            fill
-            className="object-cover rounded-lg"
-            priority
-          />
-        </div>
+   if (!article) {
+     notFound()
+   }
 
-        <ArticleContent content={article.content} />
+   const mdxSource = await serialize(article.content, {
+     mdxOptions: {
+       remarkPlugins: [remarkGfm],
+       rehypePlugins: [
+         rehypeSlug,
+         [rehypeHighlight, { ignoreMissing: true }],
+       ],
+     },
+   })
 
-        <div className="flex flex-wrap gap-2 mt-8">
-          {article.categories.map((category) => (
-            <span
-              key={category.id}
-              className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-sm"
-            >
-              {category.name}
-            </span>
-          ))}
-          {article.tags.map((tag) => (
-            <span
-              key={tag.id}
-              className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm"
-            >
-              #{tag.name}
-            </span>
-          ))}
-        </div>
-      </div>
+   return (
+     <article className="container mx-auto py-8">
+       <header className="mb-8">
+         <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+         {article.author && (
+           <div className="flex items-center space-x-4">
+             {article.author.avatar ? (
+               <div className="relative w-10 h-10">
+                 <Image
+                   src={article.author.avatar}
+                   alt={article.author.name || 'Author'}
+                   fill
+                   className="object-cover rounded-full"
+                   sizes="40px"
+                   priority
+                 />
+               </div>
+             ) : (
+               <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                 <span className="text-lg font-semibold">
+                   {article.author.name?.[0]?.toUpperCase() || '?'}
+                 </span>
+               </div>
+             )}
+             <div>
+               <p className="font-medium">{article.author.name}</p>
+               {article.author.bio && (
+                 <p className="text-sm text-muted-foreground">{article.author.bio}</p>
+               )}
+             </div>
+           </div>
+         )}
+         
+         {article.coverImage && (
+           <div className="relative w-full aspect-video mt-6">
+             <Image
+               src={article.coverImage}
+               alt={article.title}
+               fill
+               className="object-cover rounded-lg"
+               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+               priority
+             />
+           </div>
+         )}
+       </header>
+       
+       <div className="prose lg:prose-xl dark:prose-invert mx-auto">
+         <MDXRemote 
+           {...mdxSource}
+           components={{
+             img: ({ src, alt, ...props }) => (
+               <div className="relative w-full aspect-video my-8">
+                 <Image
+                   src={src || ''}
+                   alt={alt || ''}
+                   fill
+                   className="object-cover rounded-lg"
+                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                 />
+               </div>
+             ),
+           }}
+         />
+       </div>
 
-      <hr className="my-16" />
-
-      <RelatedArticles
-        currentArticleId={article.id}
-        categoryIds={article.categories.map((c) => c.id)}
-      />
-
-      <Comments articleId={article.id} />
-    </article>
-  )
+       <footer className="mt-8">
+         <div className="flex flex-wrap gap-2">
+           {article.categories.map((category) => (
+             <span key={category.slug} className="bg-primary/10 px-3 py-1 rounded-full text-sm">
+               {category.name}
+             </span>
+           ))}
+         </div>
+       </footer>
+     </article>
+   )
+ } catch (error) {
+   console.error('Error loading article:', error)
+   notFound()
+ }
 }
