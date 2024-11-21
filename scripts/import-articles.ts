@@ -11,7 +11,6 @@ async function importArticles() {
     await prisma.$connect()
     console.log('Database connected successfully')
 
-    // Update the path to point to the app directory
     const articlesDirectory = path.join(process.cwd(), 'app', 'content', 'articles')
     console.log('Looking for articles in:', articlesDirectory)
     
@@ -19,37 +18,59 @@ async function importArticles() {
     console.log('Found files:', filenames)
 
     for (const filename of filenames) {
-      const filePath = path.join(articlesDirectory, filename)
-      console.log('Processing file:', filePath)
-      
-      const fileContents = fs.readFileSync(filePath, 'utf8')
-      const { data, content } = matter(fileContents)
+      try {
+        const filePath = path.join(articlesDirectory, filename)
+        console.log('Processing file:', filePath)
+        
+        const fileContents = fs.readFileSync(filePath, 'utf8')
+        const { data, content } = matter(fileContents)
 
-      const article = await prisma.article.create({
-        data: {
-          title: data.title,
-          slug: filename.replace('.md', ''),
-          content: content,
-          excerpt: data.excerpt,
-          coverImage: data.coverImage,
-          status: data.status as 'PUBLISHED',
-          publishedAt: new Date(data.publishedAt),
-          authorId: data.author,
-          readingTime: data.readingTime,
-          metaTitle: data.metaTitle,
-          metaDescription: data.metaDescription,
-          wordCount: content.split(/\s+/).length,
-        },
-      })
+        // Verify author exists
+        const author = await prisma.author.findUnique({
+          where: { id: data.author }
+        })
 
-      console.log(`Imported article:`, {
-        title: article.title,
-        slug: article.slug,
-        authorId: article.authorId
-      })
+        if (!author) {
+          console.error(`Author with ID ${data.author} not found for article ${filename}`)
+          continue
+        }
+
+        // Check if article already exists
+        const existingArticle = await prisma.article.findUnique({
+          where: { slug: filename.replace('.md', '') }
+        })
+
+        if (existingArticle) {
+          console.log(`Article ${filename} already exists, skipping...`)
+          continue
+        }
+
+        const article = await prisma.article.create({
+          data: {
+            title: data.title,
+            slug: filename.replace('.md', ''),
+            content: content,
+            excerpt: data.excerpt,
+            coverImage: data.coverImage,
+            status: data.status as 'PUBLISHED',
+            publishedAt: new Date(data.publishedAt),
+            authorId: data.author,
+            readingTime: data.readingTime,
+            metaTitle: data.metaTitle,
+            metaDescription: data.metaDescription,
+            wordCount: content.split(/\s+/).length,
+          },
+        })
+
+        console.log(`Imported article:`, {
+          title: article.title,
+          slug: article.slug,
+          authorId: article.authorId
+        })
+      } catch (error) {
+        console.error(`Error processing ${filename}:`, error)
+      }
     }
-
-    console.log('Import completed successfully!')
 
     // Verify the imports
     const articles = await prisma.article.findMany({

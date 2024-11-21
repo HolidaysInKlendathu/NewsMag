@@ -3,9 +3,7 @@ title: "Getting Started with Web Development in 2024"
 excerpt: "A comprehensive guide for beginners looking to start their journey in web development, covering essential technologies and learning paths."
 coverImage: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6"
 publishedAt: "2024-01-15T09:00:00.000Z"
-author: "clskvz5p00000eiw89ekv6q2j"
-categories: ["Web Development", "Programming"]
-tags: ["JavaScript", "HTML", "CSS", "Beginners"]
+author: "cm3pw0m9u00026hqfvtiqmtcw"
 status: "PUBLISHED"
 readingTime: 8
 metaTitle: "Web Development Guide 2024 | Complete Beginner's Guide"

@@ -1,11 +1,9 @@
 ---
 title: "AI Trends Shaping the Future in 2024"
 excerpt: "Explore the latest artificial intelligence trends that are transforming industries and shaping our technological future."
-coverImage: "https://images.unsplash.com/photo-1677442135703-1787c332844a?q=80&w=2070&auto=format&fit=crop"
+coverImage: "https://images.unsplash.com/photo-1677442135703-1787c332844a"
 publishedAt: "2024-01-20T10:30:00.000Z"
-author: "clskvz5p00000eiw89ekv6q2j"
-categories: ["Artificial Intelligence", "Technology"]
-tags: ["AI", "Machine Learning", "Future Tech", "Innovation"]
+author: "cm3pw0m9u00026hqfvtiqmtcw"
 status: "PUBLISHED"
 readingTime: 10
 metaTitle: "AI Trends 2024 | Latest Developments in Artificial Intelligence"

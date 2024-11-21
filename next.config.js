@@ -4,17 +4,20 @@ const nextConfig = {
   experimental: {
     serverActions: true,
     typedRoutes: true,
+    mdxRs: true
   },
   images: {
     domains: [
       'images.unsplash.com',
-      'res.cloudinary.com',  // if you use Cloudinary
+      'res.cloudinary.com',  
       'imgur.com',
       'i.imgur.com',
-      's3.amazonaws.com',    // if you use AWS S3
+      's3.amazonaws.com',    
       'your-custom-domain.com'
     ],
   },
+  transpilePackages: ['next-mdx-remote'],
+
 }
 
 module.exports = nextConfig
