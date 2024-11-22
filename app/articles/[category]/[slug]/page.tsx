@@ -1,12 +1,18 @@
+// app/articles/[category]/[slug]/page.tsx
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { compileMDX } from 'next-mdx-remote/rsc'
 import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import rehypeHighlight from 'rehype-highlight'
 import { prisma } from '@/lib/prisma'
 import { ArticleStatus } from '@prisma/client'
+
+type Props = {
+  params: { category: string; slug: string }
+}
 
 export async function generateStaticParams() {
   const articles = await prisma.article.findMany({
@@ -15,24 +21,32 @@ export async function generateStaticParams() {
     },
     select: {
       slug: true,
+      categories: {
+        select: {
+          slug: true,
+        },
+      },
     },
   })
 
-  return articles.map((article) => ({
-    slug: article.slug,
-  }))
+  return articles.flatMap((article) => 
+    article.categories.map((category) => ({
+      category: category.slug,
+      slug: article.slug,
+    }))
+  )
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}): Promise<Metadata> {
-  const { slug } = await params
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await prisma.article.findFirst({
     where: { 
-      slug: slug,
+      slug: params.slug,
       status: ArticleStatus.PUBLISHED,
+      categories: {
+        some: {
+          slug: params.category
+        }
+      }
     },
     select: {
       title: true,
@@ -47,8 +61,12 @@ export async function generateMetadata({
         },
       },
       categories: {
+        orderBy: {
+          order: 'asc',
+        },
         select: {
           name: true,
+          slug: true,
         },
       },
       tags: {
@@ -63,10 +81,17 @@ export async function generateMetadata({
     return { title: 'Article Not Found' }
   }
 
+  // Get the primary category (first in the ordered list)
+  const primaryCategory = article.categories[0]
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/articles/${primaryCategory.slug}/${params.slug}`
+
   return {
     title: article.title,
     description: article.excerpt,
     authors: article.author?.name ? [{ name: article.author.name }] : [],
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: article.title,
       description: article.excerpt,
@@ -82,6 +107,7 @@ export async function generateMetadata({
           alt: article.title,
         }
       ] : [],
+      url: canonicalUrl,
     },
   }
 }
@@ -102,16 +128,16 @@ function MDXImg({ src, alt }: { src?: string; alt?: string }) {
   )
 }
 
-export default async function ArticlePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
-  const { slug } = await params
+export default async function ArticlePage({ params }: Props) {
   const article = await prisma.article.findFirst({
     where: { 
-      slug: slug,
+      slug: params.slug,
       status: ArticleStatus.PUBLISHED,
+      categories: {
+        some: {
+          slug: params.category
+        }
+      }
     },
     select: {
       title: true,
@@ -128,6 +154,9 @@ export default async function ArticlePage({
         },
       },
       categories: {
+        orderBy: {
+          order: 'asc',
+        },
         select: {
           name: true,
           slug: true,
@@ -212,9 +241,13 @@ export default async function ArticlePage({
       <footer className="mt-8">
         <div className="flex flex-wrap gap-2">
           {article.categories.map((category) => (
-            <span key={category.slug} className="bg-primary/10 px-3 py-1 rounded-full text-sm">
+            <Link
+              key={category.slug}
+              href={`/articles/${category.slug}`}
+              className="bg-primary/10 px-3 py-1 rounded-full text-sm hover:bg-primary/20 transition-colors"
+            >
               {category.name}
-            </span>
+            </Link>
           ))}
         </div>
       </footer>

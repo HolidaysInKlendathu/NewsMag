@@ -8,6 +8,7 @@ status: "PUBLISHED"
 readingTime: 8
 metaTitle: "Web Development Guide 2024 | Complete Beginner's Guide"
 metaDescription: "Learn how to start your web development journey in 2024 with this comprehensive guide covering all essential technologies and best practices."
+categories: ["technology"]
 ---
 
 # Getting Started with Web Development in 2024

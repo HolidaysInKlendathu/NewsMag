@@ -10,9 +10,11 @@ datasource db {
 model Author {
   id          String   @id @default(cuid())
   name        String
+  slug        String   @unique
   email       String?  @unique
   bio         String?  @db.LongText
   avatar      String?
+  coverImage  String?  @db.Text // Added @db.Text modifier
   website     String?
   location    String?
   expertise   String?  @db.Text
@@ -27,7 +29,7 @@ model Author {
 
   // Relations
   articles Article[]
-  userId   String?   @unique // Optional link to User account
+  userId   String?   @unique
   user     User?     @relation(fields: [userId], references: [id])
 }
 
@@ -77,7 +79,7 @@ model User {
   bio           String?   @db.LongText
   website       String?
   location      String?
-  socialLinks   Json? // Store social media links
+  socialLinks   Json?
   joinedAt      DateTime  @default(now())
 
   // Relations
@@ -88,7 +90,7 @@ model User {
   bookmarks     Bookmark[]
   notifications Notification[]
   profile       Profile?
-  author        Author? // Relation to Author model
+  author        Author?
 
   // Newsletter subscription
   newsletterSubscription NewsletterSubscription?
@@ -159,7 +161,7 @@ model Category {
   slug        String     @unique
   description String?    @db.Text
   image       String?
-  parentId    String? // For nested categories
+  parentId    String?
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
   articles    Article[]
@@ -187,7 +189,7 @@ model Comment {
   // Relations
   articleId String
   userId    String
-  parentId  String? // For nested comments
+  parentId  String?
   article   Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
@@ -232,22 +234,22 @@ model Analytics {
   shares      Int     @default(0)
   avgReadTime Int     @default(0)
   bounceRate  Float   @default(0)
-  devices     Json? // Store device statistics
-  referrers   Json? // Store traffic sources
+  devices     Json?
+  referrers   Json?
 }
 
 model ArticleRelation {
   id           String @id @default(cuid())
   articleId    String
   relatedId    String
-  relationship String // e.g., "sequel", "series", "related"
+  relationship String
   order        Int    @default(0)
 
   sourceArticle  Article @relation("SourceArticles", fields: [articleId], references: [id], onDelete: Cascade)
   relatedArticle Article @relation("RelatedToArticles", fields: [relatedId], references: [id], onDelete: Cascade)
 
   @@unique([articleId, relatedId])
-  @@map("article_relations") // Optional: specify table name
+  @@map("article_relations")
 }
 
 // Newsletter & Notifications
@@ -256,7 +258,7 @@ model NewsletterSubscription {
   email       String             @unique
   userId      String?            @unique
   status      SubscriptionStatus @default(ACTIVE)
-  preferences Json? // Store subscription preferences
+  preferences Json?
   createdAt   DateTime           @default(now())
 
   user User? @relation(fields: [userId], references: [id])
@@ -264,7 +266,7 @@ model NewsletterSubscription {
 
 model Notification {
   id        String   @id @default(cuid())
-  type      String // e.g., "comment", "like", "mention"
+  type      String
   content   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -279,7 +281,7 @@ model Badge {
   name        String    @unique
   description String
   image       String
-  criteria    Json // Store achievement criteria
+  criteria    Json
   users       Profile[]
 }
 

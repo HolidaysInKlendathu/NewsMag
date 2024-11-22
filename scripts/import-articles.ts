@@ -35,13 +35,38 @@ async function importArticles() {
           continue
         }
 
+        // Process categories
+        const categoryConnections = []
+        if (data.categories && Array.isArray(data.categories)) {
+          for (const categorySlug of data.categories) {
+            const category = await prisma.category.findUnique({
+              where: { slug: categorySlug }
+            })
+            
+            if (category) {
+              categoryConnections.push({ id: category.id })
+            } else {
+              console.warn(`Category ${categorySlug} not found for article ${filename}`)
+            }
+          }
+        }
+
         // Check if article already exists
         const existingArticle = await prisma.article.findUnique({
           where: { slug: filename.replace('.md', '') }
         })
 
         if (existingArticle) {
-          console.log(`Article ${filename} already exists, skipping...`)
+          // Update existing article with categories
+          const updatedArticle = await prisma.article.update({
+            where: { id: existingArticle.id },
+            data: {
+              categories: {
+                connect: categoryConnections
+              }
+            }
+          })
+          console.log(`Updated categories for article: ${filename}`)
           continue
         }
 
@@ -59,13 +84,17 @@ async function importArticles() {
             metaTitle: data.metaTitle,
             metaDescription: data.metaDescription,
             wordCount: content.split(/\s+/).length,
+            categories: {
+              connect: categoryConnections
+            }
           },
         })
 
         console.log(`Imported article:`, {
           title: article.title,
           slug: article.slug,
-          authorId: article.authorId
+          authorId: article.authorId,
+          categories: data.categories
         })
       } catch (error) {
         console.error(`Error processing ${filename}:`, error)
@@ -75,7 +104,8 @@ async function importArticles() {
     // Verify the imports
     const articles = await prisma.article.findMany({
       include: {
-        author: true
+        author: true,
+        categories: true
       }
     })
     console.log('All articles after import:', articles)

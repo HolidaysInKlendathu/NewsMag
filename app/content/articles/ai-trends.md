@@ -8,6 +8,7 @@ status: "PUBLISHED"
 readingTime: 10
 metaTitle: "AI Trends 2024 | Latest Developments in Artificial Intelligence"
 metaDescription: "Discover the most important artificial intelligence trends of 2024 and their impact on various industries and daily life."
+categories: ["technology", "science"]
 ---
 
 # AI Trends Shaping the Future in 2024
