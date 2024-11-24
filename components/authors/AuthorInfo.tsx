@@ -49,12 +49,12 @@ export function AuthorInfo({
           <div className="flex items-center gap-2">
             <Link 
               href={`/authors/${author.slug}`}
-              className="text-xl font-bold hover:text-primary dark:font-primary transition-colors"
+              className="text-xl font-bold hover:text-primary dark:text-[#2e2e2e] transition-colors"
             >
               {author.name}
             </Link>
             {isComplete && author.verified && (
-              <CheckCircle2 className="w-5 h-5 text-blue-500" />
+              <CheckCircle2 className="w-5 h-5 text-[#ffa32a]" />
             )}
           </div>
 
@@ -85,7 +85,7 @@ export function AuthorInfo({
           {isComplete && showExpertise && author.expertise && (
             <div className="flex flex-wrap gap-2 mt-4">
               {author.expertise.split(',').map(skill => (
-                <Badge key={skill} variant="secondary">
+                <Badge key={skill} variant="default">
                   {skill.trim()}
                 </Badge>
               ))}
