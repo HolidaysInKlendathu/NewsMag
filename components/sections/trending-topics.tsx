@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge'
+import { Route } from 'next'
 import Link from 'next/link'
 
 export function TrendingTopics() {
@@ -18,7 +19,7 @@ export function TrendingTopics() {
       <h2 className="text-3xl font-bold">Trending Topics</h2>
       <div className="flex flex-wrap gap-3">
         {topics.map((topic) => (
-          <Link key={topic.name} href={`/topic/${topic.name.toLowerCase()}`}>
+          <Link key={topic.name} href={`/topic/${topic.name.toLowerCase()}` as Route}>
             <Badge variant="secondary" className="text-sm">
               {topic.name}
               <span className="ml-2 text-xs text-muted-foreground">

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
+import { Route } from 'next'
 
 export function Footer() {
   return (
@@ -16,22 +17,22 @@ export function Footer() {
             <h3 className="mb-4 text-lg font-semibold">Categories</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/category/politics" className="text-muted-foreground hover:text-foreground">
+                <Link href={'/category/politics' as Route} className="text-muted-foreground hover:text-foreground">
                   Politics
                 </Link>
               </li>
               <li>
-                <Link href="/category/technology" className="text-muted-foreground hover:text-foreground">
+                <Link href={'/category/technology' as Route} className="text-muted-foreground hover:text-foreground">
                   Technology
                 </Link>
               </li>
               <li>
-                <Link href="/category/culture" className="text-muted-foreground hover:text-foreground">
+                <Link href={'/category/culture' as Route} className="text-muted-foreground hover:text-foreground">
                   Culture
                 </Link>
               </li>
               <li>
-                <Link href="/category/science" className="text-muted-foreground hover:text-foreground">
+                <Link href={'/category/science' as Route} className="text-muted-foreground hover:text-foreground">
                   Science
                 </Link>
               </li>
@@ -83,10 +84,10 @@ export function Footer() {
             © 2024 Modern Magazine. All rights reserved.
           </p>
           <div className="flex gap-4 text-sm text-muted-foreground">
-            <Link href="/privacy" className="hover:text-foreground">
+            <Link href={'/privacy' as Route} className="hover:text-foreground">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-foreground">
+            <Link href={'/terms' as Route} className="hover:text-foreground">
               Terms of Service
             </Link>
           </div>
@@ -95,3 +96,4 @@ export function Footer() {
     </footer>
   )
 }
+

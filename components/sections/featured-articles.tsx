@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Route } from 'next'
 
 export function FeaturedArticles() {
   const articles = [
@@ -34,7 +35,7 @@ export function FeaturedArticles() {
     <section className="space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Featured Articles</h2>
-        <Link href="/articles" className="text-primary hover:underline">
+        <Link href={"/articles" as Route} className="text-primary hover:underline">
           View All
         </Link>
       </div>

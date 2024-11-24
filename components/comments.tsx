@@ -1,35 +1,18 @@
-'use client'
+import { useState, FormEvent } from 'react'
+import { useToast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Comment, CommentType } from './Comment'
 
-import { useSession } from 'next-auth/react'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Button } from './ui/button'
-import { Textarea } from './ui/textarea'
-import { useToast } from './ui/use-toast'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-
-const commentSchema = z.object({
-  content: z.string().min(1).max(500),
-})
-
-interface CommentsProps {
-  articleId: string
-}
-
-export function Comments({ articleId }: CommentsProps) {
-  const { data: session } = useSession()
+export function Comments({ articleId }: { articleId: string }) {
+  const [comments, setComments] = useState<CommentType[]>([])
+  const [newComment, setNewComment] = useState('')
   const { toast } = useToast()
-  const [comments, setComments] = useState([])
-  const form = useForm({
-    resolver: zodResolver(commentSchema),
-    defaultValues: {
-      content: '',
-    },
-  })
 
-  async function onSubmit(data: z.infer<typeof commentSchema>) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!newComment.trim()) return
+
     try {
       const response = await fetch('/api/comments', {
         method: 'POST',
@@ -37,69 +20,98 @@ export function Comments({ articleId }: CommentsProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          content: data.content,
           articleId,
+          content: newComment,
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to post comment')
+      if (!response.ok) {
+        throw new Error('Failed to submit comment')
+      }
 
-      const newComment = await response.json()
-      setComments([newComment, ...comments])
-      form.reset()
-      
+      const createdComment: CommentType = await response.json()
+      setComments(prevComments => [createdComment, ...prevComments])
+      setNewComment('')
+
       toast({
-        title: 'Comment posted successfully',
+        title: "Comment submitted",
+        description: "Your comment has been successfully posted.",
       })
     } catch (error) {
+      console.error('Error submitting comment:', error)
       toast({
-        title: 'Error posting comment',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to submit comment. Please try again.",
+        variant: "destructive",
       })
     }
   }
 
-  if (!session) {
-    return (
-      <div className="text-center py-8">
-        <p>Please sign in to leave a comment.</p>
-        <Button className="mt-4">Sign In</Button>
-      </div>
-    )
+  const handleReply = async (parentId: string, content: string) => {
+    try {
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          articleId,
+          parentId,
+          content,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit reply')
+      }
+
+      const createdReply: CommentType = await response.json()
+      setComments(prevComments => addReply(prevComments, parentId, createdReply))
+
+      toast({
+        title: "Reply submitted",
+        description: "Your reply has been successfully posted.",
+      })
+    } catch (error) {
+      console.error('Error submitting reply:', error)
+      toast({
+        title: "Error",
+        description: "Failed to submit reply. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const addReply = (comments: CommentType[], parentId: string, newReply: CommentType): CommentType[] => {
+    return comments.map(comment => {
+      if (comment.id === parentId) {
+        return { ...comment, replies: [newReply, ...comment.replies] }
+      } else if (comment.replies.length > 0) {
+        return { ...comment, replies: addReply(comment.replies, parentId, newReply) }
+      }
+      return comment
+    })
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-16">
-      <h2 className="text-2xl font-bold mb-8">Comments</h2>
-      
-      <form onSubmit={form.handleSubmit(onSubmit)} className="mb-8">
+    <div className="mt-8">
+      <h2 className="text-2xl font-bold mb-4">Comments</h2>
+      <form onSubmit={handleSubmit} className="mb-6">
         <Textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
           placeholder="Leave a comment..."
-          {...form.register('content')}
-          className="mb-4"
+          className="mb-2"
+          required
         />
-        <Button type="submit">Post Comment</Button>
+        <Button type="submit">Submit Comment</Button>
       </form>
-
-      <div className="space-y-8">
-        {comments.map((comment: any) => (
-          <div key={comment.id} className="flex space-x-4">
-            <Avatar>
-              <AvatarImage src={comment.user.image} />
-              <AvatarFallback>{comment.user.name?.[0]}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center space-x-2">
-                <p className="font-semibold">{comment.user.name}</p>
-                <span className="text-muted-foreground text-sm">
-                  {new Date(comment.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-              <p className="mt-1">{comment.content}</p>
-            </div>
-          </div>
+      <div className="space-y-4">
+        {comments.map((comment) => (
+          <Comment key={comment.id} comment={comment} onReply={handleReply} />
         ))}
       </div>
     </div>
   )
 }
+

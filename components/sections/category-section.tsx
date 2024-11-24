@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Newspaper, Briefcase, Globe, Microscope, Camera, Heart } from 'lucide-react'
+import { Route } from 'next'
 
 export function CategorySection() {
   const categories = [
@@ -19,7 +20,7 @@ export function CategorySection() {
         {categories.map((category) => {
           const Icon = category.icon
           return (
-            <Link key={category.name} href={`/category/${category.name.toLowerCase()}`}>
+            <Link key={category.name} href={`/category/${category.name.toLowerCase()}` as Route}>
               <Card className="flex items-center gap-4 p-6 transition-colors hover:bg-muted/50">
                 <Icon className="h-8 w-8 text-primary" />
                 <div>
@@ -36,3 +37,4 @@ export function CategorySection() {
     </section>
   )
 }
+
