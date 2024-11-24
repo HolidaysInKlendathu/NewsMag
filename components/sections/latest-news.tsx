@@ -32,7 +32,7 @@ export function LatestNews() {
 
   return (
     <section className="space-y-8">
-      <h2 className="text-3xl font-bold">Latest News</h2>
+      <h2 className="text-4xl">Latest News</h2>
       <div className="grid gap-4">
         {news.map((item) => (
           <Card key={item.id} className="p-4 hover:bg-muted/50">

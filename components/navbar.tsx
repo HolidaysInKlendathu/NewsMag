@@ -1,95 +1,129 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Search } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { UserNav } from '@/components/user-nav'
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
-import { cn } from "@/lib/utils"
-import { categories } from '../app/config/categories'
-import React from 'react'
-import { Route } from 'next'
+// components/navbar.tsx
+'use client'
 
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  )
-})
-ListItem.displayName = "ListItem"
+import {
+  Navbar as NextUINavbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenuToggle,
+  NavbarMenu,
+  NavbarMenuItem,
+  Button,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@nextui-org/react"
+import Link from 'next/link'
+import Image from 'next/image'
+import { useSession, signIn } from 'next-auth/react'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { categories } from '@/app/config/categories'
+import { Search } from 'lucide-react'
+import { UserNav } from './user-nav'
+import type { Route } from 'next'
 
 export function Navbar() {
+  const { data: session } = useSession()
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2">
-          <span className="text-xl font-bold">Modern Magazine</span>
-        </Link>
+    <NextUINavbar maxWidth="xl" position="sticky">
+      <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
+        <NavbarBrand as="li" className="gap-3 max-w-fit">
+          <Link href={{ pathname: '/' }} className="flex justify-start items-center gap-1">
+            <Image
+              src="/images/logo.svg"
+              alt="Modern Magazine Logo"
+              width={52}
+              height={52}
+            />
+            
+          </Link>
+        </NavbarBrand>
+        <ul className="hidden lg:flex gap-4 justify-start ml-2">
+          {categories.map((category) => (
+            <Dropdown key={category.slug}>
+              <NavbarItem>
+                <DropdownTrigger>
+                  <Button
+                    disableRipple
+                    className="p-0 bg-transparent data-[hover=true]:bg-transparent"
+                    radius="sm"
+                    variant="light"
+                  >
+                    {category.name}
+                  </Button>
+                </DropdownTrigger>
+              </NavbarItem>
+              <DropdownMenu
+                aria-label={`${category.name} submenu`}
+                className="w-[340px] gap-2"
+              >
+                {category.subCategories.map((subCategory) => (
+                  <DropdownItem
+                    key={subCategory.slug}
+                    description={subCategory.description}
+                  >
+                    <Link
+                      href={`/articles/${category.slug}/${subCategory.slug}` as Route}
+                      className="w-full"
+                    >
+                      {subCategory.name}
+                    </Link>
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+          ))}
 
-        <NavigationMenu>
-          <NavigationMenuList>
-            {categories.map((category) => (
-              <NavigationMenuItem key={category.slug}>
-                <NavigationMenuTrigger>{category.name}</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] text-sm gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    {category.subCategories.map((subCategory) => (
-                      <ListItem
-                        key={subCategory.slug}
-                        title={subCategory.name}
-                        href={`/articles/${category.slug}/${subCategory.slug}` as Route}
-                      >
-                        {subCategory.description}
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            ))}
+        </ul>
+      </NavbarContent>
 
-            {/* Static links */}
-            <NavigationMenuItem>
-              <Link href={{ pathname: '/about' }} legacyBehavior passHref>
-                <NavigationMenuLink className="transition-colors hover:text-foreground/80">
-                  About
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+      <NavbarContent justify="end">
 
-        <div className="ml-auto flex items-center space-x-4">
-          <Button variant="ghost" size="icon">
-            <Search className="h-5 w-5" />
-          </Button>
+        <NavbarItem className="hidden sm:flex">
           <ThemeToggle />
-          <UserNav />
-        </div>
-      </div>
-    </header>
+        </NavbarItem>
+        <NavbarItem>
+          {!session ? (
+            <Button 
+              variant="flat" 
+              onClick={() => signIn()}
+              color="primary"
+            >
+              Sign In
+            </Button>
+          ) : (
+            <UserNav />
+          )}
+        </NavbarItem>
+      </NavbarContent>
+
+      <NavbarMenu>
+        {categories.map((category) => (
+          <div key={category.slug}>
+            <NavbarMenuItem className="font-bold">
+              {category.name}
+            </NavbarMenuItem>
+            {category.subCategories.map((subCategory) => (
+              <NavbarMenuItem key={subCategory.slug}>
+                <Link
+                  href={`/articles/${category.slug}/${subCategory.slug}` as Route}
+                  className="w-full"
+                >
+                  {subCategory.name}
+                </Link>
+              </NavbarMenuItem>
+            ))}
+          </div>
+        ))}
+        <NavbarMenuItem>
+          <Link href={{ pathname: '/about' }}>
+            About
+          </Link>
+        </NavbarMenuItem>
+      </NavbarMenu>
+    </NextUINavbar>
   )
 }

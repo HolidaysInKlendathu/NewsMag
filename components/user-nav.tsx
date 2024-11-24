@@ -1,58 +1,43 @@
+// components/user-nav.tsx
 'use client'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
+import { Avatar } from "@nextui-org/react"
 import {
+  Dropdown,
+  DropdownTrigger,
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { useSession, signIn, signOut } from 'next-auth/react'
+  DropdownItem,
+} from "@nextui-org/react"
+import { useSession, signOut } from 'next-auth/react'
 
 export function UserNav() {
   const { data: session } = useSession()
 
-  if (!session) {
-    return (
-      <Button variant="outline" onClick={() => signIn()}>
-        Sign In
-      </Button>
-    )
-  }
+  if (!session) return null
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={session.user?.image || ''} alt={session.user?.name || ''} />
-            <AvatarFallback>{session.user?.name?.[0]}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{session.user?.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {session.user?.email}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Dropdown placement="bottom-end">
+      <DropdownTrigger>
+        <Avatar
+          isBordered
+          as="button"
+          className="transition-transform"
+          src={session.user?.image || undefined}
+          name={session.user?.name?.[0] || '?'}
+          size="sm"
+        />
+      </DropdownTrigger>
+      <DropdownMenu aria-label="Profile Actions" variant="flat">
+        <DropdownItem key="profile" className="h-14 gap-2">
+          <p className="font-semibold">{session.user?.name}</p>
+          <p className="text-sm text-default-500">{session.user?.email}</p>
+        </DropdownItem>
+        <DropdownItem key="settings">Settings</DropdownItem>
+        <DropdownItem key="profile_page">Profile</DropdownItem>
+        <DropdownItem key="logout" color="danger" onClick={() => signOut()}>
+          Log Out
+        </DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
   )
 }

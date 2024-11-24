@@ -39,16 +39,33 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'your-custom-domain.com',
         pathname: '/**',
+      },
+      {
+        // For GitHub avatars
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        pathname: '/**',
+      },
+      {
+        // For Google avatars
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
       }
     ]
   },
   // Specific configuration for MDX
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
   
-  // This is important for next-mdx-remote
-  transpilePackages: ['next-mdx-remote'],
+  // Packages to transpile
+  transpilePackages: [
+    'next-mdx-remote',
+    '@nextui-org/react',
+    '@nextui-org/theme',
+    'framer-motion',
+  ],
   
-  // Optional: Add webpack configuration for better MDX handling
+  // Webpack configuration
   webpack: (config) => {
     config.module.rules.push({
       test: /\.mdx?$/,

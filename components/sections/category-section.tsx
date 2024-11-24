@@ -15,7 +15,7 @@ export function CategorySection() {
 
   return (
     <section className="space-y-8">
-      <h2 className="text-3xl font-bold">Categories</h2>
+      <h2 className="text-4xl">Categories</h2>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => {
           const Icon = category.icon

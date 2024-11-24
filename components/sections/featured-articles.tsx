@@ -34,7 +34,7 @@ export function FeaturedArticles() {
   return (
     <section className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Featured Articles</h2>
+        <h2 className="text-4xl">Featured Articles</h2>
         <Link href={"/articles" as Route} className="text-primary hover:underline">
           View All
         </Link>

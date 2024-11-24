@@ -20,7 +20,7 @@ export function Newsletter() {
 
   return (
     <section className="rounded-xl bg-muted p-8 text-center">
-      <h2 className="mb-2 text-3xl font-bold">Stay Updated</h2>
+      <h2 className="mb-2 text-4xl">Stay Updated</h2>
       <p className="mb-6 text-muted-foreground">
         Subscribe to our newsletter for the latest news and updates.
       </p>
