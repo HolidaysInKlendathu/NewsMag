@@ -90,8 +90,7 @@ const config = {
         DEFAULT: {
           css: {
             h2: {
-              fontWeight: '100',
-              fontStyle: 'italic',
+
             },
           },
         },

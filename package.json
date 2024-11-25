@@ -10,7 +10,8 @@
     "import-articles": "ts-node scripts/import-articles.ts",
     "build:mdx": "contentlayer build",
     "seed": "ts-node scripts/seed-db.ts",
-    "seed:cleanup": "ts-node scripts/seed-db.ts --cleanup"
+    "seed:cleanup": "ts-node scripts/seed-db.ts --cleanup",
+    "watch": "ts-node scripts/watch-articles.ts"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
@@ -45,6 +46,7 @@
     "@tabler/icons": "^3.22.0",
     "@tabler/icons-react": "^3.22.0",
     "@types/mdx": "^2.0.13",
+    "chokidar": "^4.0.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
@@ -74,6 +76,7 @@
     "rehype-prism-plus": "^2.0.0",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.0",
+    "slugify": "^1.6.6",
     "sonner": "^1.7.0",
     "tailwind-merge": "^1.14.0",
     "vaul": "^1.1.1",

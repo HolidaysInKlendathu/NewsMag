@@ -108,7 +108,6 @@ model Profile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Content Models
 model Article {
   id              String        @id @default(cuid())
   title           String
@@ -120,11 +119,26 @@ model Article {
   wordCount       Int?
   publishedAt     DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  featured        Boolean       @default(false)
   status          ArticleStatus @default(DRAFT)
   viewCount       Int           @default(0)
   metaTitle       String?
   metaDescription String?       @db.Text
+
+  // Visibility & Features
+  featured       Boolean @default(false)
+  spotlight      Boolean @default(false)
+  evergreen      Boolean @default(false)
+  sponsored      Boolean @default(false)
+  sponsorName    String?
+  partnerContent Boolean @default(false)
+  affiliate      Boolean @default(false)
+  crowdsourced   Boolean @default(false)
+  premium        Boolean @default(false)
+
+  // Media Features
+  hasVideo   Boolean @default(false)
+  hasAudio   Boolean @default(false)
+  hasGallery Boolean @default(false)
 
   // Relations
   authorId   String
