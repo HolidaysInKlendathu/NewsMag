@@ -14,13 +14,16 @@ export type Category = {
 
 export const categories: Category[] = [
   {
-    name: "Industry Updates",
-    slug: "industry-updates",
-    description: "Stay informed about the latest regulatory changes, market shifts, and trends in the insurance industry.",
+    name: "Industry News",
+    slug: "industry-news",
+    description: "Stay informed about the latest regulatory changes, market shifts, trends, ESG initiatives, and ethical practices in the insurance industry.",
     subCategories: [
       { name: "Regulatory & Legal Changes", slug: "regulatory-legal-changes" },
       { name: "Mergers, Acquisitions & Market Shifts", slug: "mergers-acquisitions-market-shifts" },
-      { name: "Trends & Insights", slug: "trends-insights" }
+      { name: "Trends & Insights", slug: "trends-insights" },
+      { name: "ESG & Green Insurance", slug: "esg-green-insurance" },
+      { name: "Consumer Protection & Fair Practices", slug: "consumer-protection-fair-practices" },
+      { name: "Transparency & Ethical Insurance", slug: "transparency-ethical-insurance" }
     ]
   },
   {
@@ -44,33 +47,30 @@ export const categories: Category[] = [
     ]
   },
   {
-    name: "Products & Reviews",
-    slug: "products-reviews",
-    description: "Discover and compare insurance types, specialized products, and in-depth reviews.",
+    name: "Products & Trends",
+    slug: "products-trends",
+    description: "Discover and compare insurance products, explore consumer preferences, and analyze market trends.",
     subCategories: [
       { name: "Insurance Types (Life, Health, Auto, etc.)", slug: "insurance-types" },
       { name: "Specialized Insurance Products (Cyber, Pet, etc.)", slug: "specialized-insurance-products" },
-      { name: "Product Comparisons & Reviews", slug: "product-comparisons-reviews" }
-    ]
-  },
-  {
-    name: "Consumer Trends",
-    slug: "consumer-trends",
-    description: "Analyze customer preferences, behavioral trends, and the overall insurance market landscape.",
-    subCategories: [
+      { name: "Product Comparisons & Reviews", slug: "product-comparisons-reviews" },
       { name: "Customer Experience in Insurance", slug: "customer-experience-insurance" },
       { name: "Changing Consumer Preferences", slug: "changing-consumer-preferences" },
       { name: "Behavioral Shifts & Market Trends", slug: "behavioral-shifts-market-trends" }
     ]
   },
   {
-    name: "Sustainability & Advocacy",
-    slug: "sustainability-advocacy",
-    description: "Learn about ESG initiatives, consumer rights, and ethical practices in the insurance industry.",
+    name: "Geographical Breakdown",
+    slug: "geographical-breakdown",
+    description: "Explore insurance news and trends across different regions in the United States and internationally.",
     subCategories: [
-      { name: "ESG & Green Insurance", slug: "esg-green-insurance" },
-      { name: "Consumer Protection & Fair Practices", slug: "consumer-protection-fair-practices" },
-      { name: "Transparency & Ethical Insurance", slug: "transparency-ethical-insurance" }
+      { name: "East", slug: "east" },
+      { name: "Midwest", slug: "midwest" },
+      { name: "South Central", slug: "south-central" },
+      { name: "Southeast", slug: "southeast" },
+      { name: "West", slug: "west" },
+      { name: "National", slug: "national" },
+      { name: "International", slug: "international" }
     ]
   }
 ]
