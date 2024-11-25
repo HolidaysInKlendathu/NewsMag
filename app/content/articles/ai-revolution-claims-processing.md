@@ -1,7 +1,7 @@
 ---
 title: "AI Revolution in Insurance Claims Processing 2024"
 excerpt: "How artificial intelligence is transforming the speed and accuracy of insurance claims processing, leading to improved customer satisfaction and reduced operational costs."
-coverImage: "https://images.unsplash.com/photo-1677442135703-1787c332844a"
+coverImage: "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc"
 publishedAt: "2024-01-26T10:30:00.000Z"
 author: "cm3pw0m9u00026hqfvtiqmtcw"
 category: "industry-news"
