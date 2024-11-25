@@ -44,7 +44,7 @@ export const BentoHero = ({ articles }: BentoHeroProps) => {
         className="col-span-1 md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden"
       >
         <motion.div
-          className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent/20 to-black"
+          className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent/05 to-black to-80%"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         />
@@ -78,7 +78,7 @@ export const BentoHero = ({ articles }: BentoHeroProps) => {
           className="col-span-1 row-span-1 relative group rounded-3xl overflow-hidden"
         >
           <motion.div
-            className="absolute inset-0 z-10 bg-gradient-to-b from-transparent to-black"
+            className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent/05 to-black to-80%"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 * index }}
