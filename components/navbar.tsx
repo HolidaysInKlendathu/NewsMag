@@ -19,7 +19,7 @@ import Image from 'next/image'
 import { useSession, signIn } from 'next-auth/react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { categories } from '@/app/config/categories'
-import { Search, ChevronDown, ArrowRight } from 'lucide-react'
+import { Search, ChevronDown, ArrowRight, ChevronLeft } from 'lucide-react'
 import { UserNav } from './user-nav'
 import type { Route } from 'next'
 import { useState } from 'react'
@@ -27,6 +27,21 @@ import { useState } from 'react'
 export function Navbar() {
   const { data: session } = useSession()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [menuTransition, setMenuTransition] = useState(false)
+
+  const handleCategoryClick = (categorySlug: string) => {
+    setMenuTransition(true)
+    setActiveCategory(categorySlug)
+  }
+
+  const handleBackClick = () => {
+    setMenuTransition(true)
+    setTimeout(() => {
+      setActiveCategory(null)
+      setMenuTransition(false)
+    }, 300) // Match this with CSS transition duration
+  }
 
   return (
     <NextUINavbar 
@@ -40,36 +55,37 @@ export function Navbar() {
         <NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} />
       </NavbarContent>
 
-      {/* Logo Section */}
-      <NavbarContent className="basis-1/5 sm:basis-1/4" justify="start">
+      {/* Logo Section - Now with more space */}
+      <NavbarContent className="basis-1/5 sm:basis-1/3" justify="start">
         <NavbarBrand as="li" className="max-w-fit">
           <Link href={{ pathname: '/' }} className="flex justify-start items-center">
             {/* Mobile Logo */}
             <Image
               src="/images/logo-p.svg"
               alt="Modern Magazine Logo"
-              width={60}
+              width={230}
               height={60}
               priority
-              className="block sm:hidden"
+              className="block sm:hidden w-[230px] h-[60px]"
             />
             
             {/* Desktop Logo */}
             <Image
               src="/images/logo-p.svg"
               alt="Modern Magazine Logo"
-              width={260}
-              height={68}
+              width={230}
+              height={60}
               priority
-              className="hidden sm:block"
+              className="hidden sm:block w-[230px] h-[60px]"
             />
           </Link>
         </NavbarBrand>
       </NavbarContent>
 
-      {/* Centered Menu */}
-      <NavbarContent className="hidden lg:flex basis-1/5 sm:basis-1/2" justify="center">
-        <ul className="flex gap-4 justify-center items-center w-full">
+      {/* Right-aligned Menu and Actions */}
+      <NavbarContent className="hidden lg:flex basis-1/5 sm:basis-2/3" justify="end">
+        {/* Menu Items */}
+        <ul className="flex gap-4 items-center">
           {categories.map((category) => (
             <Dropdown key={category.slug}>
               <NavbarItem>
@@ -119,76 +135,122 @@ export function Navbar() {
               </DropdownMenu>
             </Dropdown>
           ))}
+
+          {/* Theme Toggle */}
+          <NavbarItem>
+            <ThemeToggle />
+          </NavbarItem>
+
+          {/* Sign In Button */}
+          <NavbarItem>
+            {!session ? (
+              <Button 
+                variant="flat" 
+                onClick={() => signIn()}
+                color="primary"
+              >
+                Sign In
+              </Button>
+            ) : (
+              <UserNav />
+            )}
+          </NavbarItem>
         </ul>
       </NavbarContent>
 
-      {/* Right Section */}
-      <NavbarContent className="basis-1/5 sm:basis-1/4" justify="end">
-        <NavbarItem className="hidden sm:flex">
-          <ThemeToggle />
-        </NavbarItem>
-        <NavbarItem className="hidden sm:flex">
-          {!session ? (
-            <Button 
-              variant="flat" 
-              onClick={() => signIn()}
-              color="primary"
-            >
-              Sign In
-            </Button>
-          ) : (
-            <UserNav />
-          )}
-        </NavbarItem>
-      </NavbarContent>
-
-      {/* Mobile Menu */}
+      {/* Enhanced Mobile Menu */}
       <NavbarMenu>
-        {categories.map((category) => (
-          <div key={category.slug}>
-            <NavbarMenuItem className="font-bold">
-              {category.name}
-            </NavbarMenuItem>
-            {category.subCategories.map((subCategory) => (
-              <NavbarMenuItem key={subCategory.slug}>
-                <Link
-                  href={`/articles/${category.slug}/${subCategory.slug}` as Route}
-                  className="w-full"
-                >
-                  {subCategory.name}
-                </Link>
-              </NavbarMenuItem>
-            ))}
-          </div>
-        ))}
-        
-        <NavbarMenuItem>
-          <Link href={{ pathname: '/about' }}>
-            About
-          </Link>
-        </NavbarMenuItem>
-
-        <NavbarMenuItem className="sm:hidden">
-          <div className="flex items-center gap-2">
-            <span>Theme</span>
-            <ThemeToggle />
-          </div>
-        </NavbarMenuItem>
-
-        <NavbarMenuItem className="sm:hidden">
-          {!session ? (
-            <Button 
-              variant="flat" 
-              onClick={() => signIn()}
-              color="primary"
-              className="w-full"
+        {/* Main Menu */}
+        <div
+          className={`transform transition-transform duration-300 ${
+            activeCategory ? '-translate-x-full' : 'translate-x-0'
+          }`}
+        >
+          {/* Parent Categories */}
+          {categories.map((category) => (
+            <NavbarMenuItem 
+              key={category.slug}
+              className="flex items-center justify-between py-4 cursor-pointer"
+              onClick={() => handleCategoryClick(category.slug)}
             >
-              Sign In
-            </Button>
-          ) : (
-            <UserNav />
+              <span className="text-lg font-semibold">{category.name}</span>
+              <ArrowRight className="w-5 h-5" />
+            </NavbarMenuItem>
+          ))}
+
+          {/* Other Menu Items */}
+          <NavbarMenuItem className="py-4">
+            <Link href={{ pathname: '/about' }} className="text-lg">
+              About
+            </Link>
+          </NavbarMenuItem>
+
+          <NavbarMenuItem className="py-4">
+            <div className="flex items-center justify-between">
+              <span className="text-lg">Theme</span>
+              <ThemeToggle />
+            </div>
+          </NavbarMenuItem>
+
+          <NavbarMenuItem className="py-4">
+            {!session ? (
+              <Button 
+                variant="flat" 
+                onClick={() => signIn()}
+                color="primary"
+                className="w-full"
+                size="lg"
+              >
+                Sign In
+              </Button>
+            ) : (
+              <UserNav />
+            )}
+          </NavbarMenuItem>
+        </div>
+
+        {/* Subcategories Menu */}
+        <div
+          className={`absolute top-0 left-0 w-full h-full transform transition-transform duration-300 ${
+            activeCategory ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {activeCategory && (
+            <>
+              {/* Back Button */}
+              <NavbarMenuItem 
+                className="flex items-center gap-2 py-4 cursor-pointer border-b"
+                onClick={handleBackClick}
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span className="text-lg font-semibold">Back</span>
+              </NavbarMenuItem>
+
+              {/* Category Title */}
+              <NavbarMenuItem className="py-4">
+                <span className="text-xl font-bold">
+                  {categories.find(cat => cat.slug === activeCategory)?.name}
+                </span>
+              </NavbarMenuItem>
+
+              {/* Subcategories */}
+              {categories
+                .find(cat => cat.slug === activeCategory)
+                ?.subCategories.map((subCategory) => (
+                  <NavbarMenuItem key={subCategory.slug} className="py-4">
+                    <Link
+                      href={`/articles/${activeCategory}/${subCategory.slug}` as Route}
+                      className="flex flex-col gap-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="text-lg font-semibold">{subCategory.name}</span>
+                      <span className="text-sm text-default-500">{subCategory.description}</span>
+                    </Link>
+                  </NavbarMenuItem>
+                ))}
+            </>
           )}
-        </NavbarMenuItem>
+        </div>
       </NavbarMenu>
     </NextUINavbar>
   )

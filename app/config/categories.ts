@@ -60,7 +60,7 @@ export const categories: Category[] = [
     ]
   },
   {
-    name: "Geographical Breakdown",
+    name: "Geographical",
     slug: "geographical-breakdown",
     description: "Explore insurance news and trends across different regions in the United States and internationally.",
     subCategories: [
