@@ -4,70 +4,121 @@ import path from 'path'
 import fs from 'fs'
 import matter from 'gray-matter'
 import { PrismaClient } from '@prisma/client'
-import { generateUniqueSlug } from '../utils/slug-utils'
+import slugify from 'slugify'
 
 const prisma = new PrismaClient()
 const ARTICLES_DIR = path.join(process.cwd(), 'app/content/articles')
 
+async function generateUniqueSlug(title: string, category: string): Promise<string> {
+  const baseSlug = slugify(title, {
+    lower: true,
+    strict: true,
+    remove: /[*+~.()'"!:@]/g
+  })
+
+  const slug = `${baseSlug}`
+  let exists = await prisma.article.findFirst({
+    where: { slug }
+  })
+
+  if (!exists) return slug
+
+  // If slug exists, add incremental number
+  let counter = 1
+  let newSlug = `${slug}-${counter}`
+  
+  while (exists) {
+    newSlug = `${slug}-${counter}`
+    exists = await prisma.article.findFirst({
+      where: { slug: newSlug }
+    })
+    counter++
+  }
+
+  return newSlug
+}
+
 async function processArticle(filePath: string) {
   try {
-    console.log(`Processing new/modified article: ${path.basename(filePath)}`)
+    console.log(`\n📝 Processing article: ${path.basename(filePath)}`)
     
-    // Read and parse the markdown file
     const fileContent = fs.readFileSync(filePath, 'utf8')
     const { data, content } = matter(fileContent)
-    
-    // Generate the slug
-    const slug = await generateUniqueSlug({
-      title: data.title,
-      category: data.category,
-      publishedAt: new Date(data.publishedAt)
+
+    // Validate required fields
+    if (!data.title || !data.category) {
+      throw new Error('Article must have title and category')
+    }
+
+    // Check if category exists
+    const category = await prisma.category.findUnique({
+      where: { slug: data.category }
     })
+
+    if (!category) {
+      throw new Error(`Invalid category: ${data.category}. Please use a valid category slug.`)
+    }
+
+    // Generate unique slug
+    const slug = await generateUniqueSlug(data.title, data.category)
 
     // Check if article already exists
     const existingArticle = await prisma.article.findFirst({
       where: {
         OR: [
-          { slug },
-          { title: data.title }
+          { title: data.title },
+          { slug }
         ]
       }
     })
 
     if (existingArticle) {
-      console.log(`Article already exists: ${data.title}`)
+      console.log(`⚠️ Article already exists: ${data.title}`)
       return
     }
 
-    // Create new article in database
+    // Create new article
     const article = await prisma.article.create({
       data: {
         title: data.title,
         slug,
         content,
-        excerpt: data.excerpt || '',
-        coverImage: data.coverImage || '',
+        excerpt: data.excerpt,
+        coverImage: data.coverImage,
         publishedAt: new Date(data.publishedAt),
         authorId: data.author || 'cm3pw0m9u00026hqfvtiqmtcw',
         status: data.status || 'PUBLISHED',
+        
+        // Features and flags
         featured: Boolean(data.featured),
         spotlight: Boolean(data.spotlight),
         evergreen: Boolean(data.evergreen),
         sponsored: Boolean(data.sponsored),
+        sponsorName: data.sponsorName,
         partnerContent: Boolean(data.partnerContent),
+        affiliate: Boolean(data.affiliate),
         crowdsourced: Boolean(data.crowdsourced),
         premium: Boolean(data.premium),
+        
+        // Media features
         hasVideo: Boolean(data.hasVideo),
         hasAudio: Boolean(data.hasAudio),
         hasGallery: Boolean(data.hasGallery),
+
+        // Connect to category
+        categories: {
+          connect: [{ id: category.id }]
+        }
       }
     })
 
-    console.log(`✅ Created article: ${article.title}`)
-    console.log(`🔗 URL: /articles/${article.slug}`)
+    console.log('✅ Article created successfully:')
+    console.log(`Title: ${article.title}`)
+    console.log(`Category: ${data.category}`)
+    console.log(`URL: /articles/${data.category}/${article.slug}`)
 
   } catch (error) {
-    console.error(`Error processing article ${filePath}:`, error)
+    console.error(`❌ Error processing article:`, error)
   }
 }
 
@@ -94,7 +145,7 @@ watcher
     }
   })
   .on('ready', () => {
-    console.log('👀 Watching for new articles in content/articles...')
+    console.log('\n👀 Watching for new articles in content/articles...')
   })
   .on('error', error => {
     console.error('Error watching files:', error)

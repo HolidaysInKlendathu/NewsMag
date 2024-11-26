@@ -3,7 +3,7 @@ import { ArticleBase, ArticleWithAuthor, ArticleFull } from '@/types/article'
 
 // Helper for basic article URL generation
 export function getArticleUrl(article: ArticleBase): string {
-  return `/articles/${article.categories[0]?.slug}/${article.slug}`
+  return `/articles/${article.category}/${article.slug}`
 }
 
 // Format date for display
@@ -53,9 +53,22 @@ export function getRelatedArticles(
   return allArticles
     .filter(a => 
       a.slug !== article.slug && // Not the same article
-      a.categories.some(c => 
-        article.categories.some(ac => ac.slug === c.slug)
-      )
+      a.category === article.category // Same category
+    )
+    .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+    .slice(0, limit)
+}
+
+// Get related articles by subcategory
+export function getRelatedArticlesBySubCategory(
+  article: ArticleFull,
+  allArticles: ArticleWithAuthor[],
+  limit: number = 3
+): ArticleWithAuthor[] {
+  return allArticles
+    .filter(a => 
+      a.slug !== article.slug && // Not the same article
+      a.subCategory === article.subCategory // Same subcategory
     )
     .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
     .slice(0, limit)
@@ -77,4 +90,25 @@ export function getArticleTypeLabels(article: ArticleBase): string[] {
   if (article.evergreen) labels.push('Evergreen')
   
   return labels
+}
+
+// Get article category label
+export function getArticleCategoryLabel(article: ArticleBase): string {
+  return `${article.category} › ${article.subCategory}`.replace(/-/g, ' ')
+}
+
+// Format article URL for SEO
+export function getSeoFriendlyUrl(article: ArticleBase): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+  return `${baseUrl}/articles/${article.category}/${article.slug}`
+}
+
+// Get article breadcrumbs
+export function getArticleBreadcrumbs(article: ArticleBase) {
+  return [
+    { label: 'Home', href: '/' },
+    { label: article.category.replace(/-/g, ' '), href: `/categories/${article.category}` },
+    { label: article.subCategory.replace(/-/g, ' '), href: `/categories/${article.category}/${article.subCategory}` },
+    { label: article.title, href: getArticleUrl(article) }
+  ]
 }

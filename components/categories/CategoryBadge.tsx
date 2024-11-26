@@ -4,21 +4,13 @@ import type { Category } from '@/types/article'
 
 interface CategoryBadgeProps {
   category: Category
-  size?: 'sm' | 'md' | 'lg'
 }
 
-export function CategoryBadge({ category, size = 'sm' }: CategoryBadgeProps) {
-  const sizeClasses = {
-    sm: 'text-xs px-2 py-1',
-    md: 'text-sm px-3 py-1',
-    lg: 'text-base px-4 py-2'
-  }
-
+export function CategoryBadge({ category }: CategoryBadgeProps) {
   return (
-    <Link
-      href={`/articles/${category.slug}`}
-      className={`${sizeClasses[size]} bg-primary/10 rounded-full hover:bg-primary/20 transition-colors inline-block`}
-    >
+    <Link 
+      ref={`/categories/${category.slug}`}
+      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors" href={'/'}    >
       {category.name}
     </Link>
   )

@@ -8,16 +8,37 @@ import type { ArticleWithAuthor } from '@/types/article'
 
 interface ArticleCardProps {
   article: ArticleWithAuthor
-  categorySlug: string
+  categorySlug?: string // Made optional since we now have category in article
 }
 
-export function ArticleCard({ article, categorySlug }: ArticleCardProps) {
-  const { title, slug, excerpt, coverImage, publishedAt, author, categories } = article
+export function ArticleCard({ article }: ArticleCardProps) {
+  const { 
+    title, 
+    slug, 
+    excerpt, 
+    coverImage, 
+    publishedAt, 
+    author, 
+    category,
+    subCategory 
+  } = article
+
+  const categoryInfo = {
+    name: category.replace(/-/g, ' '), // Convert slug to display name
+    slug: category,
+    description: null
+  }
+
+  const subCategoryInfo = {
+    name: subCategory.replace(/-/g, ' '),
+    slug: subCategory,
+    description: null
+  }
 
   return (
     <article className="flex flex-col bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
       {coverImage && (
-        <Link href={`/articles/${categorySlug}/${slug}`}>
+        <Link href={`/articles/${category}/${slug}`}>
           <div className="relative w-full aspect-video rounded-t-xl">
             <Image
               src={coverImage}
@@ -33,7 +54,7 @@ export function ArticleCard({ article, categorySlug }: ArticleCardProps) {
       <div className="flex flex-col flex-grow p-6">
         <h2 className="text-xl font-bold mb-2">
           <Link 
-            href={`/articles/${categorySlug}/${slug}`}
+            href={`/articles/${category}/${slug}`}
             className="hover:text-primary transition-colors"
           >
             {title}
@@ -46,12 +67,8 @@ export function ArticleCard({ article, categorySlug }: ArticleCardProps) {
         
         <div className="mt-auto">
           <div className="flex flex-wrap gap-2 mb-4">
-            {categories.map((category) => (
-              <CategoryBadge 
-                key={category.slug}
-                category={category}
-              />
-            ))}
+            <CategoryBadge category={categoryInfo} />
+            <CategoryBadge category={subCategoryInfo} />
           </div>
           
           <div className="flex items-center justify-between text-sm pt-4 border-t">
