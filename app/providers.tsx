@@ -6,7 +6,6 @@ import { useTheme } from 'next-themes'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme()
-  
   return (
     <NextUIProvider>
       {children}

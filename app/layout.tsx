@@ -6,8 +6,14 @@ import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/components/auth-provider'
-import '@fontsource-variable/inter/wght.css'
-import '@fontsource-variable/inter/wght-italic.css'
+import { Providers } from './providers'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -51,19 +57,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-      </head>
+    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased">
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <div className="min-h-screen flex flex-col">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <Toaster />
+            <Providers>
+              <div className="min-h-screen flex flex-col">
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <Toaster />
+            </Providers>
           </ThemeProvider>
         </AuthProvider>
       </body>

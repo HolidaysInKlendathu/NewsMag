@@ -104,11 +104,17 @@ export interface ArticleFrontmatter {
 }
 
 // Helper type for BentoHero component
-export interface BentoArticle extends Pick<ArticleBase, 
-  'title' | 'excerpt' | 'coverImage' | 'publishedAt' | 
-  'category' | 'subCategory' | 'slug' | 'featured'
-> {
-  id: string
+export interface BentoArticle {
+    id: string
+    title: string
+    publishedAt: string
+    coverImage: string
+    slug: string
+    featured: boolean
+    category: string    // Main category slug
+    subCategory: string // Sub category slug
+    imageUrl: string
+    excerpt?: string
 }
 
 // Helper functions
@@ -123,15 +129,3 @@ export function isFeaturedArticle(article: ArticleBase): boolean {
 export function isSpotlightArticle(article: ArticleBase): boolean {
   return article.spotlight
 }
-
-export interface BentoArticle {
-    id: string
-    title: string
-    excerpt: string
-    coverImage: string
-    publishedAt: Date
-    slug: string
-    featured: boolean
-    category: string    // Main category slug
-    subCategory: string // Sub category slug
-  }

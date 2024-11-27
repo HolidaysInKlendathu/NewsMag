@@ -50,6 +50,11 @@ async function processArticle(filePath: string) {
       throw new Error('Article must have title and category')
     }
 
+    // Validate coverImage URL
+    if (!data.coverImage || !data.coverImage.startsWith('http')) {
+      throw new Error('Invalid coverImage URL. Must be a valid HTTP URL')
+    }
+
     // Check if category exists
     const category = await prisma.category.findUnique({
       where: { slug: data.category }
@@ -84,7 +89,7 @@ async function processArticle(filePath: string) {
         slug,
         content,
         excerpt: data.excerpt,
-        coverImage: data.coverImage,
+        coverImage: data.coverImage.trim(),
         publishedAt: new Date(data.publishedAt),
         authorId: data.author || 'cm3pw0m9u00026hqfvtiqmtcw',
         status: data.status || 'PUBLISHED',
@@ -114,6 +119,7 @@ async function processArticle(filePath: string) {
 
     console.log('✅ Article created successfully:')
     console.log(`Title: ${article.title}`)
+    console.log(`Cover Image: ${article.coverImage}`)
     console.log(`Category: ${data.category}`)
     console.log(`URL: /articles/${data.category}/${article.slug}`)
 

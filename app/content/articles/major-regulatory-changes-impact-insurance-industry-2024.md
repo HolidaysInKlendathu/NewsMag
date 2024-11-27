@@ -2,7 +2,7 @@
 title: "Major Regulatory Changes Impact Insurance Industry in 2024"
 slug: "major-regulatory-changes-impact-insurance-industry-2024"
 excerpt: "Key regulatory updates affecting insurance providers, including new compliance requirements and reporting standards for 2024"
-coverImage: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85"
+coverImage: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000"
 publishedAt: "2024-01-26T10:30:00.000Z"
 author: "cm3pw0m9u00026hqfvtiqmtcw"
 status: "PUBLISHED"
