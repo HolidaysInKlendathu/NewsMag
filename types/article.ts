@@ -111,10 +111,12 @@ export interface BentoArticle {
     coverImage: string
     slug: string
     featured: boolean
-    category: string    // Main category slug
-    subCategory: string // Sub category slug
-    imageUrl: string
+    categories: {
+        name: string
+        slug: string
+    }[]
     excerpt?: string
+    imageUrl: string
 }
 
 // Helper functions

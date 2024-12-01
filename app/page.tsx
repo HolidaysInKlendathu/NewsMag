@@ -21,6 +21,8 @@ export default async function HomePage() {
     console.log('HomePage: Starting to render');
     const articles = await getLatestArticles();
     
+    console.log('HomePage: Articles received:', articles);
+    
     if (!articles || articles.length === 0) {
       console.error('No articles returned from getLatestArticles');
       return (
@@ -70,6 +72,7 @@ async function getLatestArticles(): Promise<BentoArticle[]> {
         featured: true,
         categories: {
           select: {
+            name: true,
             slug: true,
             parentId: true
           }
@@ -80,6 +83,9 @@ async function getLatestArticles(): Promise<BentoArticle[]> {
       },
       take: 5
     });
+
+    console.log('Number of articles found:', articles.length);
+    console.log('First article:', articles[0]);
 
     console.log('Raw articles from database:', articles);
 

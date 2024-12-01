@@ -7,15 +7,23 @@ import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { BentoArticle, generateArticleUrl } from "@/types/article"
 import { Route } from 'next'
+import { prisma } from '@/lib/prisma'
 
-export const BentoHero = ({ articles }: { articles: BentoArticle[] }) => {
+interface BentoHeroProps {
+  articles: BentoArticle[]
+}
+
+export function BentoHero({ articles }: BentoHeroProps) {
   if (!articles?.length) return null;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-4 max-w-8xl mx-auto h-[800px] md:h-[600px]">
       {/* Main Featured Article */}
       <Link 
-        href={generateArticleUrl(articles[0]) as Route}
+        href={generateArticleUrl({
+          category: articles[0].categories?.[0]?.slug || 'uncategorized',
+          slug: articles[0].slug
+        }) as Route}
         className="col-span-1 md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden"
       >
         <motion.div
@@ -33,9 +41,9 @@ export const BentoHero = ({ articles }: { articles: BentoArticle[] }) => {
         <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              {articles[0].category && (
+              {articles[0].categories?.[0] && (
                 <span className="text-sm font-medium text-white/90 bg-primary/20 px-2 py-0.5 rounded-full">
-                  {articles[0].category}
+                  {articles[0].categories[0].name}
                 </span>
               )}
               {articles[0].publishedAt && (
@@ -60,7 +68,10 @@ export const BentoHero = ({ articles }: { articles: BentoArticle[] }) => {
       {articles.slice(1, 5).map((article, index) => (
         <Link
           key={article.id}
-          href={generateArticleUrl(article) as Route}
+          href={generateArticleUrl({
+            category: article.categories?.[0]?.slug || 'uncategorized',
+            slug: article.slug
+          }) as Route}
           className="col-span-1 relative group rounded-3xl overflow-hidden"
         >
           <motion.div
@@ -78,9 +89,9 @@ export const BentoHero = ({ articles }: { articles: BentoArticle[] }) => {
           <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                {article.category && (
+                {article.categories?.[0] && (
                   <span className="text-xs font-medium text-white/90 bg-primary/20 px-2 py-0.5 rounded-full">
-                    {article.category}
+                    {article.categories[0].name}
                   </span>
                 )}
                 {article.publishedAt && (
@@ -99,3 +110,19 @@ export const BentoHero = ({ articles }: { articles: BentoArticle[] }) => {
     </div>
   );
 };
+
+export async function getLatestArticles() {
+  return await prisma.article.findMany({
+    where: {
+      status: 'PUBLISHED',
+    },
+    orderBy: {
+      publishedAt: 'desc'
+    },
+    take: 5,
+    include: {
+      categories: true,
+      author: true
+    }
+  })
+}

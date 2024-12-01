@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { ArticleStatus } from '@prisma/client'
 import { ArticleGrid } from '../../../components/articles/ArticleGrid'
 import { getArticleContent } from '@/lib/minio'
+import { processMarkdown } from '@/lib/markdown'
 
 type Params = { category: string }
 type SearchParams = { [key: string]: string | string[] | undefined }
@@ -71,6 +72,17 @@ export default async function CategoryPage({
 
   if (!category) notFound()
 
+  // Fetch and process markdown content for each article
+  const articlesWithContent = await Promise.all(
+    category.articles.map(async (article) => {
+      if (!article.markdownUrl) {
+        return { ...article, content: '' }
+      }
+      const { content } = await processMarkdown(article.markdownUrl)
+      return { ...article, content }
+    })
+  )
+
   return (
     <div className="container mx-auto py-8">
       <header className="mb-12">
@@ -81,7 +93,7 @@ export default async function CategoryPage({
       </header>
 
       <ArticleGrid 
-        articles={category.articles}
+        articles={articlesWithContent}
         categorySlug={category.slug}
       />
     </div>

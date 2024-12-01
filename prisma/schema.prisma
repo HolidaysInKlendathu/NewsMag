@@ -113,6 +113,7 @@ model Article {
   title           String
   slug            String        @unique
   content         String        @db.Text
+  markdownUrl     String?       @db.Text
   excerpt         String        @db.Text
   coverImage      String
   readingTime     Int?
