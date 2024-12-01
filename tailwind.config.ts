@@ -23,7 +23,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['Inter Variable', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

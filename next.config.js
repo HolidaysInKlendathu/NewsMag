@@ -37,7 +37,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'your-custom-domain.com',
+        hostname: 'unsplash.com',
         pathname: '/**',
       },
       {

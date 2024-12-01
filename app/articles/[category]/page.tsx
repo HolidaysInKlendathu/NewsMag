@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { ArticleStatus } from '@prisma/client'
 import { ArticleGrid } from '../../../components/articles/ArticleGrid'
+import { getArticleContent } from '@/lib/minio'
 
 type Params = { category: string }
 type SearchParams = { [key: string]: string | string[] | undefined }

@@ -4,8 +4,10 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypePrism from 'rehype-prism-plus'
+import { getArticleContent } from './minio'
 
-export async function processMDX(content: string) {
+export async function processMDX(objectName: string) {
+  const content = await getArticleContent(objectName)
   const { content: processedContent, frontmatter } = await compileMDX({
     source: content,
     options: {

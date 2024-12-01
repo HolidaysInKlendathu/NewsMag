@@ -5,11 +5,12 @@ import fs from 'fs'
 import matter from 'gray-matter'
 import { PrismaClient } from '@prisma/client'
 import slugify from 'slugify'
+import { minioClient, getArticleContent } from '@/lib/minio'
 
 const prisma = new PrismaClient()
-const ARTICLES_DIR = path.join(process.cwd(), 'app/content/articles')
+const BUCKET_NAME = process.env.MINIO_BUCKET || ''
 
-async function generateUniqueSlug(title: string, category: string): Promise<string> {
+async function generateUniqueSlug(title: string): Promise<string> {
   const baseSlug = slugify(title, {
     lower: true,
     strict: true,
@@ -38,12 +39,12 @@ async function generateUniqueSlug(title: string, category: string): Promise<stri
   return newSlug
 }
 
-async function processArticle(filePath: string) {
+async function processArticle(objectName: string) {
   try {
-    console.log(`\n📝 Processing article: ${path.basename(filePath)}`)
+    console.log(`\n📝 Processing article: ${objectName}`)
     
-    const fileContent = fs.readFileSync(filePath, 'utf8')
-    const { data, content } = matter(fileContent)
+    const content = await getArticleContent(objectName)
+    const { data, content: markdownContent } = matter(content)
 
     // Validate required fields
     if (!data.title || !data.category) {
@@ -65,7 +66,7 @@ async function processArticle(filePath: string) {
     }
 
     // Generate unique slug
-    const slug = await generateUniqueSlug(data.title, data.category)
+    const slug = await generateUniqueSlug(data.title)
 
     // Check if article already exists
     const existingArticle = await prisma.article.findFirst({
@@ -87,7 +88,7 @@ async function processArticle(filePath: string) {
       data: {
         title: data.title,
         slug,
-        content,
+        content: markdownContent,
         excerpt: data.excerpt,
         coverImage: data.coverImage.trim(),
         publishedAt: new Date(data.publishedAt),
@@ -128,38 +129,17 @@ async function processArticle(filePath: string) {
   }
 }
 
-// Initialize watcher
-const watcher = chokidar.watch(ARTICLES_DIR, {
-  ignored: /(^|[\/\\])\../, // ignore dotfiles
-  persistent: true,
-  awaitWriteFinish: {
-    stabilityThreshold: 2000,
-    pollInterval: 100
-  }
-})
-
-// Add event listeners
-watcher
-  .on('add', filePath => {
-    if (path.extname(filePath) === '.md') {
-      processArticle(filePath)
+// Replace chokidar watcher with MinIO events
+minioClient.listenBucketNotification(BUCKET_NAME, '', '', ['s3:ObjectCreated:*'])
+  .on('notification', async (record: any) => {
+    const objectName = record.s3.object.key
+    if (objectName.endsWith('.md')) {
+      await processArticle(objectName)
     }
-  })
-  .on('change', filePath => {
-    if (path.extname(filePath) === '.md') {
-      processArticle(filePath)
-    }
-  })
-  .on('ready', () => {
-    console.log('\n👀 Watching for new articles in content/articles...')
-  })
-  .on('error', error => {
-    console.error('Error watching files:', error)
   })
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  watcher.close()
   prisma.$disconnect()
   process.exit(0)
 })
